@@ -2,7 +2,7 @@
  * AccountTrigger - Handles Account update operations
  * 
  * This trigger updates the primary contact's description when an Account
- * is updated. Fully bulkified and follows best practices.
+ * is updated. Fully bulkified and follows best practicess.
  */
 trigger AccountTrigger on Account (after update) {
     

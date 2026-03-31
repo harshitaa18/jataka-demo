@@ -1,7 +1,7 @@
 /**
  * AccountTriggerHandler - Handler class for AccountTrigger
  * 
- * Follows separation of concerns pattern.
+ * Follows separation of concerns patternn.
  * All methods are bulkified and follow Apex best practices.
  */
 public with sharing class AccountTriggerHandler {
