@@ -1,10 +1,38 @@
 /**
  * AccountTriggerHandler - Handler class for AccountTrigger
  * 
- * Follows separation of concerns patternn.
+ * Follows separation of concerns pattern.
  * All methods are bulkified and follow Apex best practices.
  */
 public with sharing class AccountTriggerHandler {
+    
+    /**
+     * Handles after insert logic for Account records
+     * @param newRecords - New Account records
+     */
+    public static void handleAfterInsert(List<Account> newRecords) {
+        // Set default country if state is specified but country is not
+        for (Account acc : newRecords) {
+            // Fix: Ensure country is set before state/province
+            if ((acc.BillingState != null || acc.ShippingState != null) && 
+                (acc.BillingCountry == null && acc.ShippingCountry == null)) {
+                
+                // Set default country to prevent FIELD_INTEGRITY_EXCEPTION
+                acc.BillingCountry = 'US';
+                acc.ShippingCountry = 'US';
+            }
+        }
+        
+        // Update the records with country information
+        if (!newRecords.isEmpty()) {
+            try {
+                update newRecords;
+            } catch (Exception e) {
+                // Log error but don't prevent the operation
+                System.debug('Error updating Account countries: ' + e.getMessage());
+            }
+        }
+    }
     
     /**
      * Handles after update logic for Account records

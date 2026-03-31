@@ -1,37 +1,16 @@
 /**
- * AccountTrigger - Handles Account update operations
+ * AccountTrigger - Handles Account operations
  * 
  * This trigger updates the primary contact's description when an Account
- * is updated. Fully bulkified and follows best practicess.
+ * is updated. Fully bulkified and follows best practices.
  */
-trigger AccountTrigger on Account (after update) {
+trigger AccountTrigger on Account (after insert, after update) {
     
-    // Collect Account IDs for bulk processing
-    Set<Id> accountIds = new Set<Id>();
-    for (Account acc : Trigger.new) {
-        accountIds.add(acc.Id);
+    if (Trigger.isAfter && Trigger.isInsert) {
+        AccountTriggerHandler.handleAfterInsert(Trigger.new);
     }
     
-    // Single SOQL query - BULKIFIED (no SOQL in for loops)
-    List<Contact> contactsToUpdate = [
-        SELECT Id, AccountId, Description
-        FROM Contact
-        WHERE AccountId IN :accountIds
-        AND IsPrimary__c = true
-    ];
-    
-    // Process contacts in bulk
-    for (Contact con : contactsToUpdate) {
-        Account oldAcc = Trigger.oldMap.get(con.AccountId);
-        Account newAcc = Trigger.newMap.get(con.AccountId);
-        
-        if (oldAcc.Name != newAcc.Name) {
-            con.Description = 'Updated via Account: ' + newAcc.Name;
-        }
-    }
-    
-    // Single DML statement - BULKIFIED
-    if (!contactsToUpdate.isEmpty()) {
-        update contactsToUpdate;
+    if (Trigger.isAfter && Trigger.isUpdate) {
+        AccountTriggerHandler.handleAfterUpdate(Trigger.new, Trigger.oldMap);
     }
 }
