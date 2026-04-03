@@ -102,7 +102,7 @@ public with sharing class AccountTriggerHandler {
      * @return True if contact should be updated
      */
     private static Boolean shouldUpdateContact(Account oldAcc, Account newAcc) {
-        return newAcc != null && oldAcc.Name != newAcc.Name;
+        return newAcc != null && oldAcc.Industry != newAcc.Industry; 
     }
     
     /**
