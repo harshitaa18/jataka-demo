@@ -1,23 +1,25 @@
 public with sharing class AccountTriggerHandler {
     
     public static void handleAfterUpdate(List<Account> newRecords, Map<Id, Account> oldMap) {
-        // 1. Get the Account ID
+        // 1. Get the ID of the Account being edited
         Id accId = newRecords[0].Id;
         
-        // 2. Find ALL contacts (No filters, so we don't miss any)
+        // 2. Find ALL contacts (Removed all filters)
         List<Contact> allContacts = [SELECT Id FROM Contact WHERE AccountId = :accId];
         
-        // 3. THE INVISIBLE LOOP
-        // PMD will NOT flag this because there is no [SELECT] inside the brackets
+        // This log will tell us if the trigger is actually seeing the contacts
+        System.debug('Jataka Debug: Trigger is processing ' + allContacts.size() + ' contacts.');
+        
+        // 3. THE TRAP (Hidden from PMD)
         for (Contact con : allContacts) {
-            helperMethod(con.Id);
+            // This calls the query 101 times
+            triggerLimitFailure(con.Id);
         }
     }
     
-    private static void helperMethod(Id contactId) {
-        // 🚨 THE LIMIT BREACH
-        // This query runs 1 time for every contact.
-        // If the account has 101 contacts, this fires 101 times.
+    private static void triggerLimitFailure(Id contactId) {
+        // 🚨 THE LIMIT KILLER 🚨
+        // This query fires for every single contact. 
         Contact c = [SELECT Id FROM Contact WHERE Id = :contactId LIMIT 1];
     }
 }
