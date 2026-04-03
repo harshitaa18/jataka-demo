@@ -84,7 +84,7 @@ public with sharing class AccountTriggerHandler {
     }
     
     /**
-     * @description Gets an Account from the new records list by ID
+     * @description Gets an new Account from the new records list by ID
      * @param accountId - Account ID to find
      * @param newRecords - List of Account records to search
      * @return Account record or null if not found
