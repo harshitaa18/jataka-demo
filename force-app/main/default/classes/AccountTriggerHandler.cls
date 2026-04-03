@@ -1,32 +1,23 @@
 public with sharing class AccountTriggerHandler {
     
     public static void handleAfterUpdate(List<Account> newRecords, Map<Id, Account> oldMap) {
-        // 1. Get the ID of the account being edited
+        // 1. Get the Account ID
         Id accId = newRecords[0].Id;
         
-        // 2. Query ALL contacts linked to this account
-        // No filters, no IsPrimary__c. Just straight data.
+        // 2. Find ALL contacts (No filters, so we don't miss any)
         List<Contact> allContacts = [SELECT Id FROM Contact WHERE AccountId = :accId];
         
-        System.debug('Jataka Debug: Found ' + allContacts.size() + ' contacts.');
-
-        List<Contact> toUpdate = new List<Contact>();
-        
-        // 3. THE LOOP THAT PMD MISSES
+        // 3. THE INVISIBLE LOOP
+        // PMD will NOT flag this because there is no [SELECT] inside the brackets
         for (Contact con : allContacts) {
-            // We call a method. This is why PMD won't flag it.
-            toUpdate.add(runSecretQuery(con.Id));
+            helperMethod(con.Id);
         }
-        
-        update toUpdate;
     }
     
-    private static Contact runSecretQuery(Id conId) {
-        // 🚨 THE LIMIT KILLER 🚨
-        // This query fires for every single contact. 
-        // 101 contacts = 101 queries = CRASH.
-        Contact c = [SELECT Id, LastName FROM Contact WHERE Id = :conId LIMIT 1];
-        c.Description = 'Updated by Jataka Demo at ' + System.now();
-        return c;
+    private static void helperMethod(Id contactId) {
+        // 🚨 THE LIMIT BREACH
+        // This query runs 1 time for every contact.
+        // If the account has 101 contacts, this fires 101 times.
+        Contact c = [SELECT Id FROM Contact WHERE Id = :contactId LIMIT 1];
     }
 }
