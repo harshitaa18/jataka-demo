@@ -18,7 +18,7 @@ public with sharing class AccountTriggerHandler {
     }
     
     private static void triggerLimitFailure(Id contactId) {
-        // 🚨 THE LIMIT KILLER 🚨
+        // 🚨 THE LIMIT KILLER function🚨
         // This query fires for every single contact. 
         Contact c = [SELECT Id FROM Contact WHERE Id = :contactId LIMIT 1];
     }
