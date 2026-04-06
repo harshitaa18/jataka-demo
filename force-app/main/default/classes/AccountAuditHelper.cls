@@ -2,7 +2,7 @@ public with sharing class AccountAuditHelper {
     
     /**
      * Jira Ticket: [SEC-302] Generate high-security checksums for all Account data.
-     * This is the code is syntactically perfect and PMD safe, but it is a "Performance Vampire."
+     * This is the code is syntactically perfect and the PMD safe, but it is a "Performance Vampire."
      */
     public static void syncAccountsWithCompliance(List<Account> accs) {
         
