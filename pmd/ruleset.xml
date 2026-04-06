@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Aggressive Apex Rules"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Strict Apex static analysis (PMD 7 compatible)
+    </description>
+
+    <!-- 🚨 PERFORMANCE -->
+    <rule ref="category/apex/performance.xml"/>
+
+    <!-- 🔐 SECURITY -->
+    <rule ref="category/apex/security.xml"/>
+
+    <!-- 🧠 DESIGN (strict) -->
+    <rule ref="category/apex/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="5"/>
+            <property name="classReportLevel" value="20"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/apex/design.xml/AvoidDeeplyNestedIfStmts">
+        <properties>
+            <property name="problemDepth" value="3"/>
+        </properties>
+    </rule>
+
+    <!-- 🧹 BEST PRACTICES -->
+    <rule ref="category/apex/bestpractices.xml"/>
+
+    <!-- 🚨 ERROR PRONE -->
+    <rule ref="category/apex/errorprone.xml"/>
+
+</ruleset>
