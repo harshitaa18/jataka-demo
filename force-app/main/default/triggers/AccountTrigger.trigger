@@ -1,4 +1,4 @@
 trigger AccountTrigger on Account (after update) {
-    // FIXED: Now uses memory-safe bbatch processing for compliance audit
+    // This will now hang the UI for 9 seconds
     AccountAuditHelper.syncAccountsWithCompliance(Trigger.new);
 }
