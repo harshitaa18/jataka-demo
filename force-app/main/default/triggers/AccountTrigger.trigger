@@ -6,6 +6,6 @@
  */
 trigger AccountTrigger on Account (after update) {
     
-    // Delegate all logic to handler class - no logic in trigger
+    
     AccountTriggerHandler.handleAfterUpdate(Trigger.new, Trigger.oldMap);
 }
