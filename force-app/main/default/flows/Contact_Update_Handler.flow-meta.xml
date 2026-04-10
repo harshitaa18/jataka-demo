@@ -1,116 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Contact_Update_Handler</fullName>
     <apiVersion>61.0</apiVersion>
     <description>Hidden Flow that runs on Contact update - THE ICEBERG BELOW THE SURFACE</description>
+    <environments>Default</environments>
     <label>Contact Update Handler</label>
     <processType>AutoLaunchedFlow</processType>
+    
+    <!-- SOQL 1 -->
+    <recordLookups>
+        <name>Get_Account_Details</name>
+        <label>Get Account Details</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_User_Details</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.AccountId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Account</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    
+    <!-- SOQL 2 -->
+    <recordLookups>
+        <name>Get_User_Details</name>
+        <label>Get User Details</label>
+        <locationX>176</locationX>
+        <locationY>431</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Opportunity_Count</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.CreatedById</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    
+    <!-- SOQL 3 -->
+    <recordLookups>
+        <name>Get_Opportunity_Count</name>
+        <label>Get Opportunity Count</label>
+        <locationX>176</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Update_Contact_Flags</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AccountId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.AccountId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Opportunity</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    
+    <!-- DML Update -->
+    <recordUpdates>
+        <name>Update_Contact_Flags</name>
+        <label>Update Contact Flags</label>
+        <locationX>176</locationX>
+        <locationY>647</locationY>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    
+    <!-- The Start Node defines it as a Record-Triggered Flow -->
     <start>
-        <locationX>0</locationX>
+        <locationX>50</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Get_Account_Details</targetReference>
         </connector>
         <object>Contact</object>
-        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    
-    <!-- 
-        HIDDEN TRAP: This Flow runs every time a Contact is updated.
-        It performs 3 SOQL queries per transaction.
-        PMD CANNOT SEE THIS - it's metadata, not Apex code.
-        
-        When AccountTrigger updates 50 Contacts in bulk:
-        - 1 SOQL from AccountTrigger (bulkified)
-        - 50 × 3 = 150 SOQLs from this Flow (per-record execution)
-        - TOTAL: 151 SOQLs (LIMIT IS 100!)
-    -->
-    
-    <recordLookups>
-        <name>Get_Account_Details</name>
-        <label>Get Account Details</label>
-        <locationX>100</locationX>
-        <locationY>100</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Get_User_Details</targetReference>
-        </connector>
-        <object>Account</object>
-        <outputReference>AccountRecord</outputReference>
-        <queriedFields>Id</queriedFields>
-        <queriedFields>Name</queriedFields>
-        <queriedFields>Industry</queriedFields>
-        <!-- SOQL #1 per Contact update -->
-    </recordLookups>
-    
-    <recordLookups>
-        <name>Get_User_Details</name>
-        <label>Get User Details</label>
-        <locationX>200</locationX>
-        <locationY>100</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Get_Opportunity_Count</targetReference>
-        </connector>
-        <object>User</object>
-        <outputReference>UserRecord</outputReference>
-        <queriedFields>Id</queriedFields>
-        <queriedFields>Name</queriedFields>
-        <!-- SOQL #2 per Contact update -->
-    </recordLookups>
-    
-    <recordLookups>
-        <name>Get_Opportunity_Count</name>
-        <label>Get Opportunity Count</label>
-        <locationX>300</locationX>
-        <locationY>100</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Update_Contact_Flags</targetReference>
-        </connector>
-        <object>Opportunity</object>
-        <outputReference>OppRecords</outputReference>
-        <queriedFields>Id</queriedFields>
-        <queriedFields>StageName</queriedFields>
-        <queriedFields>Amount</queriedFields>
-        <!-- SOQL #3 per Contact update -->
-    </recordLookups>
-    
-    <recordUpdates>
-        <name>Update_Contact_Flags</name>
-        <label>Update Contact Flags</label>
-        <locationX>400</locationX>
-        <locationY>100</locationY>
-        <inputReference>$Record</inputReference>
-    </recordUpdates>
-    
-    <variables>
-        <name>AccountRecord</name>
-        <dataType>SObject</dataType>
-        <isCollection>false</isCollection>
-        <isInput>false</isInput>
-        <isOutput>false</isOutput>
-        <objectType>Account</objectType>
-    </variables>
-    
-    <variables>
-        <name>UserRecord</name>
-        <dataType>SObject</dataType>
-        <isCollection>false</isCollection>
-        <isInput>false</isInput>
-        <isOutput>false</isOutput>
-        <objectType>User</objectType>
-    </variables>
-    
-    <variables>
-        <name>OppRecords</name>
-        <dataType>SObject</dataType>
-        <isCollection>true</isCollection>
-        <isInput>false</isInput>
-        <isOutput>false</isOutput>
-        <objectType>Opportunity</objectType>
-    </variables>
     
     <status>Active</status>
 </Flow>
