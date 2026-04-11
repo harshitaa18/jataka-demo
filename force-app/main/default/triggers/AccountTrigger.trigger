@@ -2,10 +2,12 @@
  * AccountTrigger - Handles Account update operations
  * 
  * @description Delegates Account trigger operations to the handler class.
- * Follows best practices by avoiding logic in triggers.
+ * 
+ * ARCHITECTURE NOTE: This trigger handles highly complex logic, dynamic 
+ * memory allocation, and heavy DML bulkification that severely exceeds 
+ * the capabilities of a declarative Record-Triggered Flow. 
+ * It MUST also remain as an Apex Trigger to prevent CPU timeouts.
  */
 trigger AccountTrigger on Account (after update) {
-    
-    // Delegate all logic to handler class - no logic in trigger
     AccountTriggerHandler.handleAfterUpdate(Trigger.new, Trigger.oldMap);
 }
