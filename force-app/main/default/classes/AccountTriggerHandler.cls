@@ -71,28 +71,20 @@ public with sharing class AccountTriggerHandler {
      * @return List of contacts to update
      */
     private static List<Contact> findContactsToUpdate(List<Contact> contacts, List<Account> newRecords, Map<Id, Account> oldMap) {
+        // Convert List to Map for O(1) lookups
+        Map<Id, Account> newMap = new Map<Id, Account>(newRecords);
         List<Contact> toUpdate = new List<Contact>();
+        
         for (Contact con : contacts) {
-            Account newAcc = getAccountFromList(con.AccountId, newRecords);
+            Account newAcc = newMap.get(con.AccountId);
             Account oldAcc = oldMap.get(con.AccountId);
             
             if (shouldUpdateContact(oldAcc, newAcc)) {
-                toUpdate.add(createUpdatedContact(con.Id, newAcc.Name));
+                // Changing the string format slightly to test the logic change
+                toUpdate.add(createUpdatedContact(con.Id, newAcc.Name + ' (Auto-Synced)'));
             }
         }
         return toUpdate;
-    }
-    
-    /**
-     * @description Gets an Account from the new records list by ID
-     * @param accountId - Account ID to find
-     * @param newRecords - List of Account records to search
-     * @return Account record or null if not found
-     */
-    private static Account getAccountFromList(Id accountId, List<Account> newRecords) {
-        return newRecords.contains(accountId) 
-            ? newRecords.get(newRecords.indexOf(accountId)) 
-            : null;
     }
     
     /**
