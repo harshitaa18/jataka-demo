@@ -111,7 +111,7 @@ public with sharing class AccountTriggerHandler {
     }
     
     /**
-     * @description Validates update access to Contact object and fields
+     * @description Validates update access is to Contact object and fields
      */
     private static void validateContactUpdateAccess() {
         if (!Schema.sObjectType.Contact.isUpdateable() || 
