@@ -129,4 +129,18 @@ public with sharing class AccountTriggerHandler {
             update toUpdate;
         }
     }
+
+    /**
+     * @description Fetches the primary contact info for the Lightning Web Component
+     */
+    @AuraEnabled(cacheable=true)
+    public static Contact getPrimaryContactForUI(Id accountId) {
+        List<Contact> contacts = [
+            SELECT Id, Name, Description, Phone, Email
+            FROM Contact
+            WHERE AccountId = :accountId AND IsPrimary__c = true
+            LIMIT 1
+        ];
+        return contacts.isEmpty() ? null : contacts[0];
+    }
 }
