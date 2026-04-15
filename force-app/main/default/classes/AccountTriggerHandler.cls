@@ -121,7 +121,7 @@ public with sharing class AccountTriggerHandler {
     }
     
     /**
-     * @description Updates the list on connnntactss if not empty
+     * @description Updates the list on connnnntactss if not empty
      * @param toUpdate - List of contacts to update
      */
     private static void updateContacts(List<Contact> toUpdate) {
