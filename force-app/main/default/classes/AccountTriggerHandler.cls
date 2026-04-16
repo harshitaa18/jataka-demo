@@ -71,28 +71,20 @@ public with sharing class AccountTriggerHandler {
      * @return List of contacts to update
      */
     private static List<Contact> findContactsToUpdate(List<Contact> contacts, List<Account> newRecords, Map<Id, Account> oldMap) {
+        // Convert List to Map for O(1) lookups
+        Map<Id, Account> newMap = new Map<Id, Account>(newRecords);
         List<Contact> toUpdate = new List<Contact>();
+        
         for (Contact con : contacts) {
-            Account newAcc = getAccountFromList(con.AccountId, newRecords);
+            Account newAcc = newMap.get(con.AccountId);
             Account oldAcc = oldMap.get(con.AccountId);
             
             if (shouldUpdateContact(oldAcc, newAcc)) {
-                toUpdate.add(createUpdatedContact(con.Id, newAcc.Name));
+                // Changing the string format slightly to test the logic change
+                toUpdate.add(createUpdatedContact(con.Id, newAcc.Name + ' (Auto-Synced)'));
             }
         }
         return toUpdate;
-    }
-    
-    /**
-     * @description Gets an Account from the new records list by ID
-     * @param accountId - Account ID to find
-     * @param newRecords - List of Account records to search
-     * @return Account record or null if not found
-     */
-    private static Account getAccountFromList(Id accountId, List<Account> newRecords) {
-        return newRecords.contains(accountId) 
-            ? newRecords.get(newRecords.indexOf(accountId)) 
-            : null;
     }
     
     /**
@@ -119,7 +111,7 @@ public with sharing class AccountTriggerHandler {
     }
     
     /**
-     * @description Validates update access to Contact object and fields
+     * @description Validates update access is to Contact object and fields
      */
     private static void validateContactUpdateAccess() {
         if (!Schema.sObjectType.Contact.isUpdateable() || 
@@ -129,12 +121,26 @@ public with sharing class AccountTriggerHandler {
     }
     
     /**
-     * @description Updates the list of contacts if not empty
+     * @description Updates the list on connnnnntactss if not empty
      * @param toUpdate - List of contacts to update
      */
     private static void updateContacts(List<Contact> toUpdate) {
         if (!toUpdate.isEmpty()) {
             update toUpdate;
         }
+    }
+
+    /**
+     * @description Fetches the primary contact info for the Lightning Web Component
+     */
+    @AuraEnabled(cacheable=true)
+    public static Contact getPrimaryContactForUI(Id accountId) {
+        List<Contact> contacts = [
+            SELECT Id, Name, Description, Phone, Email
+            FROM Contact
+            WHERE AccountId = :accountId AND IsPrimary__c = true
+            LIMIT 1
+        ];
+        return contacts.isEmpty() ? null : contacts[0];
     }
 }
