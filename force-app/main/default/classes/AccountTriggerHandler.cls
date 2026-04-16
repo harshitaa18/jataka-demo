@@ -71,9 +71,15 @@ public with sharing class AccountTriggerHandler {
      * @return List of contacts to update
      */
     private static List<Contact> findContactsToUpdate(List<Contact> contacts, List<Account> newRecords, Map<Id, Account> oldMap) {
+        // Create a map of newRecords for efficient lookup (replaces getAccountFromList)
+        Map<Id, Account> newAccountMap = new Map<Id, Account>();
+        for (Account acc : newRecords) {
+            newAccountMap.put(acc.Id, acc);
+        }
+
         List<Contact> toUpdate = new List<Contact>();
         for (Contact con : contacts) {
-            Account newAcc = getAccountFromList(con.AccountId, newRecords);
+            Account newAcc = newAccountMap.get(con.AccountId); // Efficient O(1) lookup
             Account oldAcc = oldMap.get(con.AccountId);
             
             if (shouldUpdateContact(oldAcc, newAcc)) {
@@ -84,25 +90,14 @@ public with sharing class AccountTriggerHandler {
     }
     
     /**
-     * @description Gets an Account from the new records list by ID
-     * @param accountId - Account ID to find
-     * @param newRecords - List of Account records to search
-     * @return Account record or null if not found
-     */
-    private static Account getAccountFromList(Id accountId, List<Account> newRecords) {
-        return newRecords.contains(accountId) 
-            ? newRecords.get(newRecords.indexOf(accountId)) 
-            : null;
-    }
-    
-    /**
      * @description Determines if a contact should be updated based on Account name change
      * @param oldAcc - Old Account record
      * @param newAcc - New Account record
      * @return True if contact should be updated
      */
     private static Boolean shouldUpdateContact(Account oldAcc, Account newAcc) {
-        return newAcc != null && oldAcc.Name != newAcc.Name;
+        // Added explicit null check for oldAcc for robustness
+        return newAcc != null && oldAcc != null && oldAcc.Name != newAcc.Name;
     }
     
     /**
