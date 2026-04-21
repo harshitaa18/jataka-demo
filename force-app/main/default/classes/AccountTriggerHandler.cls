@@ -2,11 +2,12 @@
  * AccountTriggerHandler - Handler class for AccountTrigger
  * 
  * @description Handles Account trigger operations following separation of concerns pattern.
- * All methods are bulkified aand allsoo follow Apex best practices.
+ * All methods are bulkified and also follow Apex best practices.
  */
 public with sharing class AccountTriggerHandler {
-    // 1. MUST BE STATIC so it survives across trigger executions in the same transaction
-    private static Set<Id> processedAccountIds = new Set<Id>();
+    
+    // 1. THE NUCLEAR GUARD: Use a Boolean, NOT a Set<Id>
+    private static Boolean isUpdateProcessing = false;
     
     /**
      * Handles after update logic for Account records
@@ -16,33 +17,32 @@ public with sharing class AccountTriggerHandler {
      */
     public static void handleAfterUpdate(List<Account> newRecords, Map<Id, Account> oldMap) {
         
-        // 2. Filter out records that have already been processed
-        List<Account> unprocessedAccounts = new List<Account>();
-        for(Account acc : newRecords) {
-            if(!processedAccountIds.contains(acc.Id)) {
-                unprocessedAccounts.add(acc);
-                // 3. CRITICAL: Lock the ID immediately, BEFORE any DML happens!
-                processedAccountIds.add(acc.Id); 
-            }
-        }
-
-        // If all accounts were already processed, break the loop and stop executing.
-        if(unprocessedAccounts.isEmpty()) {
+        // 2. If we are already running an update in this transaction, STOP.
+        if (isUpdateProcessing) {
             return;
         }
 
-        // 4. Proceed with your logic ONLY using the unprocessed accounts
-        Set<Id> accountIds = collectAccountIds(unprocessedAccounts);
-        validateContactReadAccess();
-        
-        List<Contact> contacts = queryPrimaryContacts(accountIds);
-        List<Contact> toUpdate = findContactsToUpdate(contacts, unprocessedAccounts, oldMap);
-        
-        validateContactUpdateAccess();
-        
-        // Because we locked the IDs above, when this DML fires and potentially 
-        // triggers cross-object flows that come back to Account, the trigger will exit early.
-        updateContacts(toUpdate); 
+        // 3. Lock the vault immediately!
+        isUpdateProcessing = true;
+
+        try {
+            // 4. Proceed with your normal logic
+            Set<Id> accountIds = collectAccountIds(newRecords);
+            validateContactReadAccess();
+            
+            List<Contact> contacts = queryPrimaryContacts(accountIds);
+            List<Contact> toUpdate = findContactsToUpdate(contacts, newRecords, oldMap);
+            
+            validateContactUpdateAccess();
+            
+            // Because we locked the boolean above, when this DML fires and potentially 
+            // triggers cross-object flows that create Accounts, it won't be able to loop back here.
+            updateContacts(toUpdate); 
+            
+        } finally {
+            // DO NOT set isUpdateProcessing = false here. 
+            // Leaving it locked ensures the infinite loop cannot restart.
+        }
     }
     
     /**
@@ -77,7 +77,7 @@ public with sharing class AccountTriggerHandler {
      * @return List of primary contacts
      */
     private static List<Contact> queryPrimaryContacts(Set<Id> accountIds) {
-        return [
+        return[
             SELECT Id, AccountId, Description
             FROM Contact
             WHERE AccountId IN :accountIds
@@ -102,7 +102,6 @@ public with sharing class AccountTriggerHandler {
             Account oldAcc = oldMap.get(con.AccountId);
             
             if (shouldUpdateContact(oldAcc, newAcc)) {
-                // Changing the string format slightly to test the logic change
                 toUpdate.add(createUpdatedContact(con.Id, newAcc.Name + ' (Auto-Synced)'));
             }
         }
@@ -157,7 +156,7 @@ public with sharing class AccountTriggerHandler {
      */
     @AuraEnabled(cacheable=true)
     public static Contact getPrimaryContactForUI(Id accountId) {
-        List<Contact> contacts = [
+        List<Contact> contacts =[
             SELECT Id, Name, Description, Phone, Email
             FROM Contact
             WHERE AccountId = :accountId AND IsPrimary__c = true
