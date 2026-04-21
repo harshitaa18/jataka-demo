@@ -5,7 +5,7 @@
  * All methods are bulkified and alsoo follow Apex best practices.
  */
 public with sharing class AccountTriggerHandler {
-    // Prevents re-processing the same Account in recursive trigger executions.
+    // 1. MUST BE STATIC so it survives across trigger executions in the same transaction
     private static Set<Id> processedAccountIds = new Set<Id>();
     
     /**
@@ -15,26 +15,34 @@ public with sharing class AccountTriggerHandler {
      * @param oldMap - Map of old Account records by ID
      */
     public static void handleAfterUpdate(List<Account> newRecords, Map<Id, Account> oldMap) {
-        List<Account> accountsToProcess = new List<Account>();
-        for (Account acc : newRecords) {
-            if (acc.Id != null && !processedAccountIds.contains(acc.Id)) {
-                accountsToProcess.add(acc);
-                processedAccountIds.add(acc.Id);
+        
+        // 2. Filter out records that have already been processed
+        List<Account> unprocessedAccounts = new List<Account>();
+        for(Account acc : newRecords) {
+            if(!processedAccountIds.contains(acc.Id)) {
+                unprocessedAccounts.add(acc);
+                // 3. CRITICAL: Lock the ID immediately, BEFORE any DML happens!
+                processedAccountIds.add(acc.Id); 
             }
         }
 
-        if (accountsToProcess.isEmpty()) {
+        // If all accounts were already processed, break the loop and stop executing.
+        if(unprocessedAccounts.isEmpty()) {
             return;
         }
 
-        Set<Id> accountIds = collectAccountIds(accountsToProcess);
+        // 4. Proceed with your logic ONLY using the unprocessed accounts
+        Set<Id> accountIds = collectAccountIds(unprocessedAccounts);
         validateContactReadAccess();
         
         List<Contact> contacts = queryPrimaryContacts(accountIds);
-        List<Contact> toUpdate = findContactsToUpdate(contacts, accountsToProcess, oldMap);
+        List<Contact> toUpdate = findContactsToUpdate(contacts, unprocessedAccounts, oldMap);
         
         validateContactUpdateAccess();
-        updateContacts(toUpdate);
+        
+        // Because we locked the IDs above, when this DML fires and potentially 
+        // triggers cross-object flows that come back to Account, the trigger will exit early.
+        updateContacts(toUpdate); 
     }
     
     /**
