@@ -5,6 +5,8 @@
  * All methods are bulkified and follow Apex best practices.
  */
 public with sharing class AccountTriggerHandler {
+    // Prevents re-processing the same Account in recursive trigger executions.
+    private static Set<Id> processedAccountIds = new Set<Id>();
     
     /**
      * Handles after update logic for Account records
@@ -13,11 +15,23 @@ public with sharing class AccountTriggerHandler {
      * @param oldMap - Map of old Account records by ID
      */
     public static void handleAfterUpdate(List<Account> newRecords, Map<Id, Account> oldMap) {
-        Set<Id> accountIds = collectAccountIds(newRecords);
+        List<Account> accountsToProcess = new List<Account>();
+        for (Account acc : newRecords) {
+            if (acc.Id != null && !processedAccountIds.contains(acc.Id)) {
+                accountsToProcess.add(acc);
+                processedAccountIds.add(acc.Id);
+            }
+        }
+
+        if (accountsToProcess.isEmpty()) {
+            return;
+        }
+
+        Set<Id> accountIds = collectAccountIds(accountsToProcess);
         validateContactReadAccess();
         
         List<Contact> contacts = queryPrimaryContacts(accountIds);
-        List<Contact> toUpdate = findContactsToUpdate(contacts, newRecords, oldMap);
+        List<Contact> toUpdate = findContactsToUpdate(contacts, accountsToProcess, oldMap);
         
         validateContactUpdateAccess();
         updateContacts(toUpdate);
