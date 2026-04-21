@@ -2,7 +2,7 @@
  * AccountTriggerHandler - Handler class for AccountTrigger
  * 
  * @description Handles Account trigger operations following separation of concerns pattern.
- * All methods are bulkified and alsoo follow Apex best practices.
+ * All methods are bulkified aand alsoo follow Apex best practices.
  */
 public with sharing class AccountTriggerHandler {
     // 1. MUST BE STATIC so it survives across trigger executions in the same transaction
