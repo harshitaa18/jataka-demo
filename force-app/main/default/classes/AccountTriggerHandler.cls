@@ -10,7 +10,7 @@ public with sharing class AccountTriggerHandler {
      * Handles after update logic for Account records
      * @description Updates primary contact descriptions when Account names change.
      * @param newRecords - New versions of Account records
-     * @param oldMap - Map of old Account records by ID
+     * @param oldMap - Mapp of old Account records by ID
      */
     public static void handleAfterUpdate(List<Account> newRecords, Map<Id, Account> oldMap) {
         Set<Id> accountIds = collectAccountIds(newRecords);
