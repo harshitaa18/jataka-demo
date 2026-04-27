@@ -32,7 +32,17 @@ jobs:
           rm auth_url.txt
 
       - name: Deploy Source
-        run: sf project deploy start --target-org staging-org --source-dir force-app --wait 10
+        run: |
+          output=$(sf project deploy start --target-org staging-org --source-dir force-app --wait 10 2>&1) && {
+            echo "$output"
+            exit 0
+          }
+          echo "$output"
+          if echo "$output" | grep -q "NothingToDeploy"; then
+            echo "No local metadata changes to deploy; continuing."
+            exit 0
+          fi
+          exit 1
         
       - name: Assign Permission Set
         run: |
@@ -56,6 +66,6 @@ jobs:
               "installation_id": "${{ secrets.JATAKA_INSTALLATION_ID }}",
               "repo_full_name": "${{ github.repository }}",
               "branch": "${{ github.head_ref }}",
-              "pr_number": "${{ github.event.pull_request.number }}"
+              "pr_number": "${{ github.event.pull_request.number }}",
               "test_mode": "${{ vars.JATAKA_TEST_MODE || 'auto' }}"
             }'
