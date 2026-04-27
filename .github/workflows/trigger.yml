@@ -57,4 +57,5 @@ jobs:
               "repo_full_name": "${{ github.repository }}",
               "branch": "${{ github.head_ref }}",
               "pr_number": "${{ github.event.pull_request.number }}"
+              "test_mode": "${{ vars.JATAKA_TEST_MODE || 'auto' }}"
             }'
