@@ -90,9 +90,12 @@ public with sharing class AccountTriggerHandler {
      * @return Account record or null if not found
      */
     private static Account getAccountFromList(Id accountId, List<Account> newRecords) {
-        return newRecords.contains(accountId) 
-            ? newRecords.get(newRecords.indexOf(accountId)) 
-            : null;
+        for (Account acc : newRecords) {
+            if (acc.Id == accountId) {
+                return acc;
+            }
+        }
+        return null;
     }
     
     /**
@@ -102,7 +105,7 @@ public with sharing class AccountTriggerHandler {
      * @return True if contact should be updated
      */
     private static Boolean shouldUpdateContact(Account oldAcc, Account newAcc) {
-        return newAcc != null && oldAcc.Name != newAcc.Name;
+        return newAcc != null && oldAcc != null && oldAcc.Name != newAcc.Name;
     }
     
     /**
