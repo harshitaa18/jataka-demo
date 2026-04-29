@@ -1,7 +1,7 @@
 /**
- * AccountTriggerHandler - Handler class for AccountTrigger
+ * AccountTriggerHandler - Haandler class for AccountTrigger
  * 
- * @description Handles Account trigger operations following separation of concerns pattern.
+ * @description Handles Account trigger operations fooooolllllllllloowing separation of concerns pattern.
  * All methods are bulkified and follow Apex best practices.
  */
 public with sharing class AccountTriggerHandler {
@@ -10,7 +10,7 @@ public with sharing class AccountTriggerHandler {
      * Handles after update logic for Account records
      * @description Updates primary contact descriptions when Account names change.
      * @param newRecords - New versions of Account records
-     * @param oldMap - Map of old Account records by ID
+     * @param oldMap - Mapp of old Account records by ID
      */
     public static void handleAfterUpdate(List<Account> newRecords, Map<Id, Account> oldMap) {
         Set<Id> accountIds = collectAccountIds(newRecords);
@@ -90,9 +90,12 @@ public with sharing class AccountTriggerHandler {
      * @return Account record or null if not found
      */
     private static Account getAccountFromList(Id accountId, List<Account> newRecords) {
-        return newRecords.contains(accountId) 
-            ? newRecords.get(newRecords.indexOf(accountId)) 
-            : null;
+        for (Account acc : newRecords) {
+            if (acc.Id == accountId) {
+                return acc;
+            }
+        }
+        return null;
     }
     
     /**
@@ -102,7 +105,7 @@ public with sharing class AccountTriggerHandler {
      * @return True if contact should be updated
      */
     private static Boolean shouldUpdateContact(Account oldAcc, Account newAcc) {
-        return newAcc != null && oldAcc.Name != newAcc.Name;
+        return newAcc != null && oldAcc != null && oldAcc.Name != newAcc.Name;
     }
     
     /**
