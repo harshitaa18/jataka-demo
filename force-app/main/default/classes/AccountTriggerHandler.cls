@@ -1,7 +1,7 @@
 /**
  * AccountTriggerHandler - Handler class for AccountTrigger
  * 
- * @description Handles Account trigger operations follohjbjbnboong separation of concerns pattern.
+ * @description Handles Account trigger operations follohjbjbjbbnboong separation of concerns pattern.
  * All methods are bulkified and follow Apex best practicees.
  */
 public with sharing class AccountTriggerHandler {
